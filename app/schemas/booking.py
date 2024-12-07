@@ -1,23 +1,32 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, validator
 from typing import Optional
 from datetime import datetime
 
 class BookingBase(BaseModel):
     train_id: int
-    seats_booked: int = Field(1, gt=0, le=6)  # Limit booking to 6 seats per transaction
+    seat_number: Optional[str] = None
 
 class BookingCreate(BookingBase):
-    pass
+    """Schema for creating a new booking"""
+    @validator('train_id')
+    def validate_train_id(cls, v):
+        if v <= 0:
+            raise ValueError('Invalid train ID')
+        return v
 
 class BookingResponse(BookingBase):
+    """Schema for returning booking details"""
     id: int
     user_id: int
-    total_price: float
-    booking_status: str
-    booked_at: datetime
+    booking_date: datetime
+    train_details: dict  # Can be populated with additional train information
 
     class Config:
         orm_mode = True
 
-class BookingDetailRequest(BaseModel):
-    booking_id: int
+class BookingSearchCriteria(BaseModel):
+    """Schema for searching bookings"""
+    user_id: Optional[int] = None
+    train_id: Optional[int] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
