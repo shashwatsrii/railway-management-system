@@ -5,11 +5,11 @@
 ### Authentication
 - POST /auth/register
 - POST /auth/login
-- Trains
+### Trains
 - POST /trains/
 - GET /trains/search
 - PUT /trains/{train_id}
-- Bookings
+### Bookings
 - GET /bookings/
 - POST /bookings/
 
