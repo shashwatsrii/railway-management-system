@@ -1,37 +1,36 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import auth, train, booking
-from app.core.config import settings
-from app.db.session import engine
-from app.db.base import Base
+from psycopg2 import OperationalError
+from sqlalchemy.orm import Session
 
-def create_tables():
-    Base.metadata.create_all(bind=engine)
+from database import engine, Base, get_db
+from routes.routes import auth_router, train_router, booking_router
 
-def start_application():
-    app = FastAPI(
-        title=settings.PROJECT_NAME,
-        version="1.0.0",
-        description="Railway Management System API"
-    )
-    
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
-    # Include routers
-    app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-    app.include_router(train.router, prefix="/trains", tags=["Trains"])
-    app.include_router(booking.router, prefix="/booking", tags=["Bookings"])
+# Initialize FastAPI application
+app = FastAPI(
+    title="Railway Management System",
+    description="IRCTC-like Railway Booking API",
+    version="1.0.0"
+)
 
-    # Create database tables
-    create_tables()
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    return app
+# Include routers
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(train_router, prefix="/trains", tags=["Trains"])
+app.include_router(booking_router, prefix="/bookings", tags=["Bookings"])
 
-app = start_application()
+@app.get("/")
+async def root():
+    return {"message": "Welcome to Railway Management System"}
+
